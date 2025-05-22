@@ -81,7 +81,7 @@ export default function PlayerTimeTracker() {
   const addTenPlayerWithRandomTimes = () => {
     const newPlayers = [];
     for (let i = 0; i < 10; i++) {
-      const randomName = `Player ${players.length + 1}`;
+      const randomName = `Player ${players.length + 1 + i}`;
       const randomTimes = generateRandomTimes(10);
 
       const newPlayer: Player = {

@@ -37,8 +37,8 @@ export default function PlayerTimeTracker() {
   const [newPlayerName, setNewPlayerName] = useState("");
   const [calculationFormula, setCalculationFormula] = useState("");
   const [calculatedPoints, setCalculatedPoints] = useState<number | null>(null);
-  const [minRandomTime, setMinRandomTime] = useState(10);
-  const [maxRandomTime, setMaxRandomTime] = useState(60);
+  const [minRandomTime, setMinRandomTime] = useState(30);
+  const [maxRandomTime, setMaxRandomTime] = useState(90);
 
   // Add a new player
   const addPlayer = () => {
@@ -76,6 +76,22 @@ export default function PlayerTimeTracker() {
     };
 
     setPlayers([...players, newPlayer]);
+  };
+
+  const addTenPlayerWithRandomTimes = () => {
+    const newPlayers = [];
+    for (let i = 0; i < 10; i++) {
+      const randomName = `Player ${players.length + 1}`;
+      const randomTimes = generateRandomTimes(10);
+
+      const newPlayer: Player = {
+        id: Date.now().toString() + i,
+        name: randomName,
+        times: randomTimes,
+      };
+      newPlayers.push(newPlayer);
+    }
+    setPlayers([...players, ...newPlayers]);
   };
 
   // Add random times to a player
@@ -264,6 +280,14 @@ export default function PlayerTimeTracker() {
               <Sparkles className="h-4 w-4" />
               Add Player with 10 Random Times
             </Button>
+            <Button
+              onClick={addTenPlayerWithRandomTimes}
+              variant="secondary"
+              className="flex items-center gap-2"
+            >
+              <Sparkles className="h-4 w-4" />
+              Add 10 Players with 10 Random Times
+            </Button>
           </div>
 
           {/* Players List */}
@@ -328,7 +352,7 @@ export default function PlayerTimeTracker() {
                                   {result.points}
                                 </div>
                                 <p className="text-xs text-muted-foreground mt-1">
-                                  1000 * WR Factor * Competitiveness * Rating *
+                                  2500 * WR Factor * Competitiveness * Rating *
                                   Popularity
                                 </p>
                               </div>
@@ -343,9 +367,23 @@ export default function PlayerTimeTracker() {
                                   {result.contributions.length}
                                 </div>
                                 <p className="text-xs text-muted-foreground mt-1">
-                                  Factor between 0.1 and 1 depending on the WR
-                                  time going from 5s to 20s. After 20s it will
-                                  always be 1.
+                                  <ul className="list-disc ml-5">
+                                    <li>
+                                      Short levels (≤5s) get a low multiplier
+                                      (min 0.1)
+                                    </li>
+                                    <li>
+                                      Longer levels (up to 20s) get a higher
+                                      multiplier (up to 1.0)
+                                    </li>
+                                    <li>
+                                      Scales smoothly using an ease-out curve
+                                      between 5s and 20s
+                                    </li>
+                                    <li>
+                                      Levels longer than 20s always return 1
+                                    </li>
+                                  </ul>
                                 </p>
                               </div>
                             </div>
@@ -359,19 +397,22 @@ export default function PlayerTimeTracker() {
                                   {result.contributions.competitiveness}
                                 </div>
                                 <p className="text-xs text-muted-foreground mt-1">
-                                  The competitiveness is a combination of:
-                                  <ul>
+                                  <ul className="list-disc ml-5">
                                     <li>
-                                      - How far the average of the top 5 is from
-                                      the WR (tighter is better)
+                                      Uses real player times to estimate how
+                                      close and grindy the competition is.
                                     </li>
                                     <li>
-                                      - How much the top 50 spreads from the top
-                                      10 (larger is better)
+                                      More spread between top times → higher
+                                      multiplier.
                                     </li>
                                     <li>
-                                      - PB-to-record ratio: How grindy the level
-                                      is (smaller is worse)
+                                      More personal bests per record → higher
+                                      multiplier (less grindy).
+                                    </li>
+                                    <li>
+                                      Levels with very few times default to a
+                                      low multiplier (0.25).
                                     </li>
                                   </ul>
                                 </p>
@@ -387,7 +428,16 @@ export default function PlayerTimeTracker() {
                                   {result.contributions.rating}
                                 </div>
                                 <p className="text-xs text-muted-foreground mt-1">
-                                  A factor from 0.5 to 1.3 based on the votes on a level, poorly rated levels are worth less
+                                  <ul className="list-disc ml-5">
+                                    <li>
+                                      Lower rating → lower multiplier (min 0.5)
+                                    </li>
+                                    <li>
+                                      Higher rating → higher multiplier (up to
+                                      1.3)
+                                    </li>
+                                    <li>Linearly scales between 0 and 100</li>
+                                  </ul>
                                 </p>
                               </div>
                             </div>
@@ -401,7 +451,17 @@ export default function PlayerTimeTracker() {
                                   {result.contributions.popularity}
                                 </div>
                                 <p className="text-xs text-muted-foreground mt-1">
-                                  A factor from 0.9 to 3.0 based on the amount of personal bests
+                                  <ul className="list-disc ml-5">
+                                    <li>
+                                      Fewer PBs → lower multiplier (min 0.8)
+                                    </li>
+                                    <li>
+                                      More PBs → higher multiplier (up to 1.3)
+                                    </li>
+                                    <li>
+                                      Scales smoothly up to a cap of 250 PBs
+                                    </li>
+                                  </ul>
                                 </p>
                               </div>
                             </div>
